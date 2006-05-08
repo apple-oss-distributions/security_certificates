@@ -139,7 +139,7 @@
 			buildPhases = (
 			);
 			buildSettings = {
-				CURRENT_PROJECT_VERSION = 27797;
+				CURRENT_PROJECT_VERSION = 27799;
 				PRODUCT_NAME = security_certificates;
 			};
 			buildToolPath = /usr/bin/make;
@@ -824,7 +824,7 @@
 				C2F9CFAA07BB049D000111FE,
 			);
 			buildSettings = {
-				CURRENT_PROJECT_VERSION = 27797;
+				CURRENT_PROJECT_VERSION = 27799;
 				PRODUCT_NAME = "copy certs";
 			};
 			dependencies = (
