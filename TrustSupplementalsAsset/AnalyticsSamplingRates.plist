@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Topics</key>
+	<dict>
+		<key>KeySyncTopic</key>
+		<dict>
+			<key>NumberOfEvents</key>
+			<integer>1000</integer>
+			<key>SecondsBetweenUploadsInternal</key>
+			<integer>86400</integer>
+			<key>SecondsBetweenUploadsCustomer</key>
+			<integer>259200</integer>
+			<key>SecondsBetweenUploadsSeed</key>
+			<integer>86400</integer>
+			<key>DevicePercentageInternal</key>
+			<integer>100</integer>
+			<key>DevicePercentageCustomer</key>
+			<integer>100</integer>
+			<key>DevicePercentageSeed</key>
+			<integer>100</integer>
+		</dict>
+		<key>TrustTopic</key>
+		<dict>
+			<key>NumberOfEvents</key>
+			<integer>1000</integer>
+			<key>SecondsBetweenUploadsInternal</key>
+			<integer>86400</integer>
+			<key>SecondsBetweenUploadsCustomer</key>
+			<integer>259200</integer>
+			<key>SecondsBetweenUploadsSeed</key>
+			<integer>86400</integer>
+			<key>DevicePercentageInternal</key>
+			<integer>100</integer>
+			<key>DevicePercentageCustomer</key>
+			<real>0.5</real>
+			<key>DevicePercentageSeed</key>
+			<integer>5</integer>
+		</dict>
+	</dict>
+	<key>Events</key>
+	<dict>
+		<key>SystemRootUsageEvent</key>
+		<integer>200</integer>
+		<key>PinningEvent</key>
+		<integer>100</integer>
+		<key>TrustFailureEvent</key>
+		<integer>100</integer>
+		<key>TrustEvaluationEvent</key>
+		<integer>100</integer>
+		<key>TLSFailureEvent</key>
+		<integer>100</integer>
+		<key>TLSConnectionEvent</key>
+		<integer>100</integer>
+		<key>HTTPConnectionEvent</key>
+		<integer>100</integer>
+		<key>ATSConnectionExceptionEvent</key>
+		<integer>100</integer>
+	</dict>
+</dict>
+</plist>
