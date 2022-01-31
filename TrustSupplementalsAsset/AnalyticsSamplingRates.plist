@@ -63,6 +63,10 @@
 		<integer>1</integer>
 		<key>com.apple.network.nwconnectionreport</key>
 		<integer>1</integer>
+		<key>TLSExperimentECHConnectionEvent</key>
+		<integer>1</integer>
+		<key>com.apple.network.flow</key>
+		<integer>1</integer>
 	</dict>
 </dict>
 </plist>
