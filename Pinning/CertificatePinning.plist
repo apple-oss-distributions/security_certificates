@@ -2,19 +2,19 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <array>
-	<integer>82</integer>
+	<integer>88</integer>
 	<dict>
 		<key>domains</key>
 		<array>
 			<dict>
 				<key>labelRegex</key>
-				<string>^p..-content$|^p..-content-|^p..-ckdatabase$|^p..-ckdatabase-|^p..-ckshare$|^p..-ckshare-|^p..-ckdevice$|^p..-ckdevice-|^p..-ckcoderouter$|^p..-ckcoderouter-|^gateway|^p..-keyvalueservice$|^p..-keyvalueservice-|^keyvalueservice|^p..-pairingws$|^p..-pairingws-|^pairingws|^metrics|^.*quota$</string>
+				<string>^p[0-9]{0,3}-content$|^p[0-9]{0,3}-content-|^p[0-9]{0,3}-ckdatabase$|^p[0-9]{0,3}-ckdatabase-|^p[0-9]{0,3}-ckshare$|^p[0-9]{0,3}-ckshare-|^p[0-9]{0,3}-ckdevice$|^p[0-9]{0,3}-ckdevice-|^p[0-9]{0,3}-ckcoderouter$|^p[0-9]{0,3}-ckcoderouter-|^gateway|^p[0-9]{0,3}-keyvalueservice$|^p[0-9]{0,3}-keyvalueservice-|^keyvalueservice|^p[0-9]{0,3}-pairingws$|^p[0-9]{0,3}-pairingws-|^pairingws|^metrics|^.*quota$</string>
 				<key>suffix</key>
 				<string>icloud.com</string>
 			</dict>
 			<dict>
 				<key>labelRegex</key>
-				<string>^p..-content$|^p..-content-|^p..-ckdatabase$|^p..-ckdatabase-|^p..-ckshare$|^p..-ckshare-|^p..-ckdevice$|^p..-ckdevice-|^p..-ckcoderouter$|^p..-ckcoderouter-|^gateway|^p..-keyvalueservice$|^p..-keyvalueservice-|^keyvalueservice|^p..-pairingws$|^p..-pairingws-|^pairingws|^metrics|^.*quota$</string>
+				<string>^p[0-9]{0,3}-content$|^p[0-9]{0,3}-content-|^p[0-9]{0,3}-ckdatabase$|^p[0-9]{0,3}-ckdatabase-|^p[0-9]{0,3}-ckshare$|^p[0-9]{0,3}-ckshare-|^p[0-9]{0,3}-ckdevice$|^p[0-9]{0,3}-ckdevice-|^p[0-9]{0,3}-ckcoderouter$|^p[0-9]{0,3}-ckcoderouter-|^gateway|^p[0-9]{0,3}-keyvalueservice$|^p[0-9]{0,3}-keyvalueservice-|^keyvalueservice|^p[0-9]{0,3}-pairingws$|^p[0-9]{0,3}-pairingws-|^pairingws|^metrics|^.*quota$</string>
 				<key>suffix</key>
 				<string>icloud.com.cn</string>
 			</dict>
@@ -343,6 +343,42 @@
 				<key>suffix</key>
 				<string>stg.ais-test.apple-programs.com</string>
 			</dict>
+			<dict>
+				<key>labelRegex</key>
+				<string>^ingest$</string>
+				<key>suffix</key>
+				<string>main.teststudies.apple.com</string>
+			</dict>
+			<dict>
+				<key>labelRegex</key>
+				<string>^ingest$</string>
+				<key>suffix</key>
+				<string>qa.teststudies.apple.com</string>
+			</dict>
+			<dict>
+				<key>labelRegex</key>
+				<string>^ingest$</string>
+				<key>suffix</key>
+				<string>release.teststudies.apple.com</string>
+			</dict>
+			<dict>
+				<key>labelRegex</key>
+				<string>^ingest$</string>
+				<key>suffix</key>
+				<string>carry.studies.apple.com</string>
+			</dict>
+			<dict>
+				<key>labelRegex</key>
+				<string>^ingest$</string>
+				<key>suffix</key>
+				<string>validation.studies.apple.com</string>
+			</dict>
+			<dict>
+				<key>labelRegex</key>
+				<string>^ingest$</string>
+				<key>suffix</key>
+				<string>research.studies.apple.com</string>
+			</dict>
 		</array>
 		<key>policyName</key>
 		<string>AppleStudies</string>
@@ -373,13 +409,13 @@
 		<array>
 			<dict>
 				<key>labelRegex</key>
-				<string>^p..-escrowproxy|^escrowproxy</string>
+				<string>^p[0-9]{0,3}-escrowproxy|^escrowproxy</string>
 				<key>suffix</key>
 				<string>icloud.com</string>
 			</dict>
 			<dict>
 				<key>labelRegex</key>
-				<string>^p..-escrowproxy|^escrowproxy</string>
+				<string>^p[0-9]{0,3}-escrowproxy|^escrowproxy</string>
 				<key>suffix</key>
 				<string>icloud.com.cn</string>
 			</dict>
@@ -555,13 +591,13 @@
 		<array>
 			<dict>
 				<key>labelRegex</key>
-				<string>^p..-setup$|^p..-setup-|^setup</string>
+				<string>^p[0-9]{0,3}-setup$|^p[0-9]{0,3}-setup-|^setup</string>
 				<key>suffix</key>
 				<string>icloud.com</string>
 			</dict>
 			<dict>
 				<key>labelRegex</key>
-				<string>^p..-setup$|^p..-setup-|^setup</string>
+				<string>^p[0-9]{0,3}-setup$|^p[0-9]{0,3}-setup-|^setup</string>
 				<key>suffix</key>
 				<string>icloud.com.cn</string>
 			</dict>
@@ -994,13 +1030,13 @@
 		<array>
 			<dict>
 				<key>labelRegex</key>
-				<string>fmipalservice$|^p..-fmip$|^fmip$|^cadmium$|^p..-fmipmobile$|^fmipmobile$</string>
+				<string>fmipalservice$|^p[0-9]{0,3}-fmip$|^fmip$|^cadmium$|^p[0-9]{0,3}-fmipmobile$|^fmipmobile$</string>
 				<key>suffix</key>
 				<string>icloud.com</string>
 			</dict>
 			<dict>
 				<key>labelRegex</key>
-				<string>^p..-fmip|^fmip|^cadmium$</string>
+				<string>^p[0-9]{0,3}-fmip$|^fmip$|^cadmium$</string>
 				<key>suffix</key>
 				<string>icloud.com.cn</string>
 			</dict>
@@ -2078,7 +2114,7 @@
 			</dict>
 			<dict>
 				<key>labelRegex</key>
-				<string>^(sh-|tj-|nc-|pr-|cn-crt-|stg-|crt-)?pod([0-9]|[0-9][0-9])?-smp-device(-dr)?$</string>
+				<string>^(sh-|tj-|nc-|pr-|cn-crt-|stg-|crt-)?pod[0-9]{0,3}-smp-device(-dr)?$</string>
 				<key>suffix</key>
 				<string>apple.com</string>
 			</dict>
@@ -2519,7 +2555,7 @@
 		<array>
 			<dict>
 				<key>labelRegex</key>
-				<string>^acsegateway$</string>
+				<string>^.*acsegateway$</string>
 				<key>suffix</key>
 				<string>icloud.com</string>
 			</dict>

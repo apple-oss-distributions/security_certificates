@@ -1,6 +1,6 @@
 {
     "$schema": "https://valid.apple.com/ct/log_list/schema_versions/log_list_schema_v3.json",
-    "assetVersion": 18,
+    "assetVersion": 20,
     "operators": [
         {
             "email": [
@@ -158,9 +158,9 @@
                     "log_id": "2ra/az+1tiKfm8K7XGvocJFxbLtRhIU0vaQ9MEjX+6s=",
                     "mmd": 86400,
                     "state": {
-                        "qualified": {
-                            "timestamp": "2022-08-30T02:31:50Z",
-                            "version": "160"
+                        "usable": {
+                            "timestamp": "2022-11-13T00:00:00Z",
+                            "version": "179"
                         }
                     },
                     "temporal_interval": {
@@ -339,13 +339,9 @@
                     "log_id": "u9nfvB+KcbWTlCOXqpJ7RzhXlQqrUugakJZkNo4e0YU=",
                     "mmd": 86400,
                     "state": {
-                        "readonly": {
-                            "final_tree_head": {
-                                "sha256_root_hash": "m8mPaxXwy+EdNwnfdsSWCKdhEk1bm/5Mp84ilMB5xvc=",
-                                "tree_size": 312892829
-                            },
-                            "timestamp": "2022-05-02T00:00:00Z",
-                            "version": "144"
+                        "retired": {
+                            "timestamp": "2022-09-15T00:00:00Z",
+                            "version": "168"
                         }
                     },
                     "url": "https://ct.googleapis.com/skydiver/"
@@ -373,13 +369,9 @@
                     "log_id": "pLkJkLQYWBSHuxOizGdwCjw1mAT5G9+443fNDsgN3BA=",
                     "mmd": 86400,
                     "state": {
-                        "readonly": {
-                            "final_tree_head": {
-                                "sha256_root_hash": "57gZIfRLpXho89LUBCQeZUDIHx8gA9PL1M4hc71W90E=",
-                                "tree_size": 1077336645
-                            },
-                            "timestamp": "2022-05-02T00:00:00Z",
-                            "version": "146"
+                        "retired": {
+                            "timestamp": "2022-09-15T00:00:00Z",
+                            "version": "170"
                         }
                     },
                     "url": "https://ct.googleapis.com/pilot/"
@@ -458,13 +450,9 @@
                     "log_id": "7ku9t3XOYLrhQmkfq+GeZqMPfl+wctiDAMR7iXqo/cs=",
                     "mmd": 86400,
                     "state": {
-                        "readonly": {
-                            "final_tree_head": {
-                                "sha256_root_hash": "Fj49ZSzvzvjNlEOCVhdkwpTlP7hyp82SFsmfWPScpv0=",
-                                "tree_size": 1117582774
-                            },
-                            "timestamp": "2022-05-02T00:00:00Z",
-                            "version": "145"
+                        "retired": {
+                            "timestamp": "2022-09-15T00:00:00Z",
+                            "version": "169"
                         }
                     },
                     "url": "https://ct.googleapis.com/rocketeer/"
@@ -543,13 +531,9 @@
                     "log_id": "KTxRllTIOWW6qlD8WAfUt2+/WHopctykwwz05UVH9Hg=",
                     "mmd": 86400,
                     "state": {
-                        "readonly": {
-                            "final_tree_head": {
-                                "sha256_root_hash": "D1H4wAJmq0MRCeLfeOtrsZ9Am015anO5MkeasNhnQWI=",
-                                "tree_size": 762430819
-                            },
-                            "timestamp": "2022-05-02T00:00:00Z",
-                            "version": "143"
+                        "retired": {
+                            "timestamp": "2022-09-15T00:00:00Z",
+                            "version": "167"
                         }
                     },
                     "url": "https://ct.googleapis.com/icarus/"
@@ -628,16 +612,16 @@
                     "log_id": "7s3QZNXbGs7FXLedtM0TojKHRny87N7DUUhZRnEftZs=",
                     "mmd": 86400,
                     "state": {
-                        "qualified": {
-                            "timestamp": "2022-08-30T02:30:16Z",
-                            "version": "154"
+                        "usable": {
+                            "timestamp": "2022-11-13T00:00:00Z",
+                            "version": "173"
                         }
                     },
                     "temporal_interval": {
                         "end_exclusive": "2025-01-01T00:00:00Z",
                         "start_inclusive": "2024-01-01T00:00:00Z"
                     },
-                    "url": "https://ct.googleapis.com/logs/argon2024/"
+                    "url": "https://ct.googleapis.com/logs/us1/argon2024/"
                 },
                 {
                     "description": "Google 'Xenon 2024' log",
@@ -645,16 +629,16 @@
                     "log_id": "dv+IPwq2+5VRwmHM9Ye6NLSkzbsp3GhCCp/mZ0xaOnQ=",
                     "mmd": 86400,
                     "state": {
-                        "qualified": {
-                            "timestamp": "2022-08-30T02:30:32Z",
-                            "version": "155"
+                        "usable": {
+                            "timestamp": "2022-11-13T00:00:00Z",
+                            "version": "174"
                         }
                     },
                     "temporal_interval": {
                         "end_exclusive": "2025-01-01T00:00:00Z",
                         "start_inclusive": "2024-01-01T00:00:00Z"
                     },
-                    "url": "https://ct.googleapis.com/logs/xenon2024/"
+                    "url": "https://ct.googleapis.com/logs/eu1/xenon2024/"
                 }
             ],
             "name": "Google"
@@ -947,9 +931,9 @@
                     "log_id": "Nc8ZG7+xbFe/D61MbULLu7YnICZR6j/hKu+oA8M71kw=",
                     "mmd": 86400,
                     "state": {
-                        "usable": {
-                            "timestamp": "2019-12-02T18:33:19Z",
-                            "version": "72"
+                        "retired": {
+                            "timestamp": "2022-09-29T00:00:00Z",
+                            "version": "172"
                         }
                     },
                     "temporal_interval": {
@@ -981,9 +965,9 @@
                     "log_id": "BZwB0yDgB4QTlYBJjRF8kDJmr69yULWvO0akPhGEDUo=",
                     "mmd": 86400,
                     "state": {
-                        "usable": {
-                            "timestamp": "2021-11-15T19:49:20Z",
-                            "version": "106"
+                        "retired": {
+                            "timestamp": "2022-09-29T00:00:00Z",
+                            "version": "171"
                         }
                     },
                     "temporal_interval": {
@@ -998,9 +982,9 @@
                     "log_id": "SLDja9qmRzQP5WoC+p0w6xxSActW3SyB2bu/qznYhHM=",
                     "mmd": 86400,
                     "state": {
-                        "qualified": {
-                            "timestamp": "2022-08-30T02:30:52Z",
-                            "version": "156"
+                        "usable": {
+                            "timestamp": "2022-11-13T00:00:00Z",
+                            "version": "175"
                         }
                     },
                     "temporal_interval": {
@@ -1015,9 +999,9 @@
                     "log_id": "c9meiRtMlnigIH1HneayxhzQUV5xGSqMa4AQesF3crU=",
                     "mmd": 86400,
                     "state": {
-                        "qualified": {
-                            "timestamp": "2022-08-30T02:31:17Z",
-                            "version": "158"
+                        "usable": {
+                            "timestamp": "2022-11-13T00:00:00Z",
+                            "version": "177"
                         }
                     },
                     "temporal_interval": {
@@ -1032,9 +1016,9 @@
                     "log_id": "fVkeEuF4KnscYWd8Xv340IdcFKBOlZ65Ay/ZDowuebg=",
                     "mmd": 86400,
                     "state": {
-                        "qualified": {
-                            "timestamp": "2022-08-30T02:31:04Z",
-                            "version": "157"
+                        "usable": {
+                            "timestamp": "2022-11-13T00:00:00Z",
+                            "version": "176"
                         }
                     },
                     "temporal_interval": {
@@ -1049,9 +1033,9 @@
                     "log_id": "5tIxY0B3jMEQQQbXcbnOwdJA9paEhvu6hzId/R43jlA=",
                     "mmd": 86400,
                     "state": {
-                        "qualified": {
-                            "timestamp": "2022-08-30T02:31:30Z",
-                            "version": "159"
+                        "usable": {
+                            "timestamp": "2022-11-13T00:00:00Z",
+                            "version": "178"
                         }
                     },
                     "temporal_interval": {
@@ -1074,9 +1058,9 @@
                     "log_id": "b1N2rDHwMRnYmQCkURX/dxUcEdkCwQApBo2yCJo32RM=",
                     "mmd": 86400,
                     "state": {
-                        "usable": {
-                            "timestamp": "2017-09-19T18:24:24Z",
-                            "version": "7"
+                        "retired": {
+                            "timestamp": "2023-01-15T00:00:00Z",
+                            "version": "182"
                         }
                     },
                     "url": "https://mammoth.ct.comodo.com/"
@@ -1193,9 +1177,9 @@
                     "log_id": "O1N3dT4tuYBOizBbBv5AO2fYT8P0x70ADS1yb+H61Bc=",
                     "mmd": 86400,
                     "state": {
-                        "qualified": {
-                            "timestamp": "2022-08-31T22:55:22Z",
-                            "version": "163"
+                        "usable": {
+                            "timestamp": "2022-11-13T00:00:00Z",
+                            "version": "180"
                         }
                     },
                     "temporal_interval": {
@@ -1210,9 +1194,9 @@
                     "log_id": "PxdLT9ciR1iUHWUchL4NEu2QN38fhWrrwb8ohez4ZG4=",
                     "mmd": 86400,
                     "state": {
-                        "qualified": {
-                            "timestamp": "2022-08-31T22:55:36Z",
-                            "version": "164"
+                        "usable": {
+                            "timestamp": "2022-11-13T00:00:00Z",
+                            "version": "181"
                         }
                     },
                     "temporal_interval": {
@@ -1301,5 +1285,5 @@
             "name": "TrustAsia"
         }
     ],
-    "version": "164"
+    "version": "182"
 }
