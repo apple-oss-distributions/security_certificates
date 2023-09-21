@@ -3,9 +3,9 @@
 <plist version="1.0">
 <dict>
 	<key>CFBundleIdentifier</key>
-	<string>com.apple.MobileAsset.CertificatePinning</string>
+	<string>com.apple.MobileAsset.PKITrustSupplementals</string>
 	<key>CFBundleName</key>
-	<string>Certificate Pinning</string>
+	<string>PKITrustSupplementals</string>
 	<key>CFBundleVersion</key>
 	<string>1.0</string>
 	<key>CFBundleShortVersionString</key>
@@ -15,9 +15,9 @@
 	<key>MobileAssetProperties</key>
 	<dict>
 		<key>_ContentVersion</key>
-		<integer>93</integer>
+		<integer>1001</integer>
 		<key>_CompatibilityVersion</key>
-		<integer>1</integer>
+		<integer>2</integer>
 	</dict>
 </dict>
 </plist>
