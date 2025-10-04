@@ -2,10 +2,11 @@
 //  CertificateToolApp.m
 //  CertificateTool
 //
-//  Copyright (c) 2012-2015 Apple Inc. All Rights Reserved.
+//  Copyright (c) 2012-2015,2024 Apple Inc. All Rights Reserved.
 //
 
 #import "CertificateToolApp.h"
+#import "DataConversion.h"
 #import "PSCerts.h"
 #import "PSUtilities.h"
 #import "PSAssetConstants.h"
@@ -13,36 +14,48 @@
 #import "PSCert.h"
 #import <Security/Security.h>
 #import <CommonCrypto/CommonDigest.h>
-//%%% #import <Security/SecCertificatePriv.h>
 
+@interface CertificateToolApp ()
+@property (readwrite) NSString* app_name;
+@property (readwrite) NSString* root_directory;
+@property (readwrite) NSString* custom_directory;
+@property (readwrite) NSString* platform_directory;
+@property (readwrite) NSString* test_root_directory;
+@property (readwrite) NSString* test_platform_directory;
+@property (readwrite) NSString* revoked_directory;
+@property (readwrite) NSString* distrusted_directory;
+@property (readwrite) NSString* allowlist_directory;
+@property (readwrite) NSString* certs_directory;
+@property (readwrite) NSString* constraints_config_path;
+@property (readwrite) NSString* evroot_config_path;
+@property (readwrite) NSString* ev_plist_path;
+@property (readwrite) NSString* info_plist_path;
+@property (readwrite) NSString* top_level_directory;
+@property (readwrite) NSString* output_directory;
+@property (readwrite) NSString* version_number_plist_path;
+@property (readwrite) NSNumber* version_number;
 
-@interface CertificateToolApp (PrivateMethods)
+@property PSCertData* certRootsData;
+@property NSDictionary* constraints_table;
+@property NSMutableDictionary* anchor_lookup_table;
+@property NSMutableDictionary* EVRootsData;
+@property NSMutableDictionary* allow_list_data;
+@property NSMutableArray*      blocked_keys;
+@property NSMutableArray*      gray_listed_keys;
+@property NSData*              derData;
 
 - (void)usage;
 - (NSString*)checkPath:(NSString*)name basePath:(NSString *)basePath isDirectory:(BOOL)isDirectory;
 
 - (BOOL)buildEVRootsData:(NSDictionary *)certs;
 - (BOOL)ensureDirectoryPath:(NSString *)dir_path;
+- (BOOL)buildConstraintsTable;
+- (BOOL)buildAnchorTable:(NSArray*)certs withConstraints:(NSDictionary*) constraints;
+- (BOOL)outputAnchors:(NSArray *)certs;
 
 @end
 
 @implementation CertificateToolApp
-
-
-@synthesize app_name = _app_name;
-@synthesize root_directory = _root_directory;
-@synthesize revoked_directory = _revoked_directory;
-@synthesize distrusted_directory = _distrusted_directory;
-@synthesize allowlist_directory = _allowlist_directory;
-@synthesize certs_directory = _certs_directory;
-@synthesize evroot_config_path = _evroot_config_path;
-@synthesize ev_plist_path = _ev_plist_path;
-@synthesize info_plist_path = _info_plist_path;
-@synthesize top_level_directory = _top_level_directory;
-@synthesize output_directory = _output_directory;
-@synthesize version_number_plist_path = _version_number_plist_path;
-@synthesize version_number = _version_number;
-
 
 - (id)init:(int)argc withArguments:(const char**)argv
 {
@@ -50,230 +63,183 @@
     {
 		_app_name = [[NSString alloc] initWithUTF8String:argv[0]];
 
-        // set all of the directory paths to nil
-		_root_directory = nil;
-		_revoked_directory = nil;
-		_distrusted_directory = nil;
-		_allowlist_directory = nil;
-		_certs_directory = nil;
-        _evroot_config_path = nil;
-		_ev_plist_path = nil;
-        _info_plist_path = nil;
-		_top_level_directory = nil;
-        _output_directory = nil;
-        _version_number_plist_path = nil;
-        _version_number = nil;
-
-
-		_certRootsData = nil;
-		_blocked_keys = nil;
-        _gray_listed_keys = nil;
-
         _allow_list_data = [NSMutableDictionary dictionary];
         _EVRootsData = [NSMutableDictionary dictionary];
-		_derData = nil;
-
 
         // Parse the command line arguments and set up the directory paths
-        for (int iCnt = 1; iCnt < argc; iCnt++)
-        {
+        for (int iCnt = 1; iCnt < argc; iCnt++) {
             const char* arg = argv[iCnt];
-            if (!strcmp(arg, "-h") || !strcmp(arg, "--help"))
-            {
+            if (!strcmp(arg, "-h") || !strcmp(arg, "--help")) {
                 [self usage];
                 return nil;
-            }
-            else if (!strcmp(arg, "-r") || !strcmp(arg, "--roots_dir"))
-            {
-                if ((iCnt + 1) == argc)
-                {
+            } else if (!strcmp(arg, "-r") || !strcmp(arg, "--roots_dir")) {
+                if ((iCnt + 1) == argc) {
                     [self usage];
                     return nil;
                 }
-
                 _root_directory = [[NSString stringWithUTF8String:argv[iCnt + 1]] stringByExpandingTildeInPath];
                 iCnt++;
-
-            }
-			else if (!strcmp(arg, "-k") || !strcmp(arg, "--revoked_dir"))
-            {
-                if ((iCnt + 1) == argc)
-                {
+            } else if (!strcmp(arg, "-k") || !strcmp(arg, "--revoked_dir")) {
+                if ((iCnt + 1) == argc) {
                     [self usage];
                     return nil;
                 }
-
                 _revoked_directory = [[NSString stringWithUTF8String:argv[iCnt + 1]]  stringByExpandingTildeInPath];
                 iCnt++;
-            }
-			else if (!strcmp(arg, "-d") || !strcmp(arg, "--distrusted_dir"))
-            {
-                if ((iCnt + 1) == argc)
-                {
+            } else if (!strcmp(arg, "-d") || !strcmp(arg, "--distrusted_dir")) {
+                if ((iCnt + 1) == argc) {
                     [self usage];
                     return nil;
                 }
-
                 _distrusted_directory = [[NSString stringWithUTF8String:argv[iCnt + 1]] stringByExpandingTildeInPath];
                 iCnt++;
-            }
-            else if (!strcmp(arg, "-a") || !strcmp(arg, "--allowlist_dir"))
-            {
-                if ((iCnt + 1) == argc)
-                {
+            } else if (!strcmp(arg, "-a") || !strcmp(arg, "--allowlist_dir")) {
+                if ((iCnt + 1) == argc) {
                     [self usage];
                     return nil;
                 }
-
                 _allowlist_directory = [[NSString stringWithUTF8String:argv[iCnt + 1]] stringByExpandingTildeInPath];
                 iCnt++;
-            }
-			else if (!strcmp(arg, "-c") || !strcmp(arg, "--certs_dir"))
-            {
-                if ((iCnt + 1) == argc)
-                {
+            } else if (!strcmp(arg, "-c") || !strcmp(arg, "--certs_dir")) {
+                if ((iCnt + 1) == argc) {
                     [self usage];
                     return nil;
                 }
-
                 _certs_directory = [[NSString stringWithUTF8String:argv[iCnt + 1]] stringByExpandingTildeInPath];
                 iCnt++;
-            }
-			else if (!strcmp(arg, "-e") || !strcmp(arg, "--evroot.config"))
-            {
-                if ((iCnt + 1) == argc)
-                {
+            } else if (!strcmp(arg, "-e") || !strcmp(arg, "--evroot.config")) {
+                if ((iCnt + 1) == argc) {
                     [self usage];
                     return nil;
                 }
-
                 _evroot_config_path = [[NSString stringWithUTF8String:argv[iCnt + 1]] stringByExpandingTildeInPath];
                 iCnt++;
-            }
-
-            else if (!strcmp(arg, "-i") || !strcmp(arg, "--info_plist_path"))
-            {
-                if ((iCnt + 1) == argc)
-                {
+            } else if (!strcmp(arg, "-i") || !strcmp(arg, "--info_plist_path")) {
+                if ((iCnt + 1) == argc) {
                     [self usage];
                     return nil;
                 }
-
                 _info_plist_path = [[NSString stringWithUTF8String:argv[iCnt + 1]] stringByExpandingTildeInPath];
                 iCnt++;
-            }
-			else if (!strcmp(arg, "-t") || !strcmp(arg, "--top_level_directory"))
-            {
-                if ((iCnt + 1) == argc)
-                {
+            } else if (!strcmp(arg, "-t") || !strcmp(arg, "--top_level_directory")) {
+                if ((iCnt + 1) == argc) {
                     [self usage];
                     return nil;
                 }
-
                 _top_level_directory = [[NSString stringWithUTF8String:argv[iCnt + 1]] stringByExpandingTildeInPath];
                 iCnt++;
-            }
-            else if (!strcmp(arg, "-o") || !strcmp(arg, "--output_directory"))
-            {
-                if ((iCnt + 1) == argc)
-                {
+            } else if (!strcmp(arg, "-o") || !strcmp(arg, "--output_directory")) {
+                if ((iCnt + 1) == argc)  {
                     [self usage];
                     return nil;
                 }
-
                 _output_directory = [[NSString stringWithUTF8String:argv[iCnt + 1]] stringByExpandingTildeInPath];
                 iCnt++;
-            }
-            else if (!strcmp(arg, "-v") || !strcmp(arg, "--version_number"))
-            {
-                if ((iCnt + 1) == argc)
-                {
+            } else if (!strcmp(arg, "-v") || !strcmp(arg, "--version_number")) {
+                if ((iCnt + 1) == argc)  {
                     [self usage];
                     return nil;
                 }
-
                 NSString* temp_number_str = [NSString stringWithUTF8String:argv[iCnt + 1]];
-                if (nil != temp_number_str)
-                {
+                if (nil != temp_number_str) {
                     NSInteger value = [temp_number_str integerValue];
-                    if (value > 0)
-                    {
+                    if (value > 0) {
                         _version_number = [NSNumber numberWithInteger:value];
                     }
                 }
             }
         }
 
-        if (nil == _root_directory)
-        {
+        if (nil == _root_directory) {
 			_root_directory = [self checkPath:@"certificates/roots" basePath:_top_level_directory isDirectory:YES];
-		 	if (nil == _root_directory)
-			{
+		 	if (nil == _root_directory) {
 				[self usage];
 				return nil;
         	}
 		}
+        if (nil == _test_root_directory) {
+            _test_root_directory = [self checkPath:@"certificates/test-roots" basePath:_top_level_directory isDirectory:YES];
+             if (nil == _test_root_directory) {
+                [self usage];
+                return nil;
+            }
+        }
+        if (nil == _custom_directory) {
+            _custom_directory = [self checkPath:@"certificates/custom" basePath:_top_level_directory isDirectory:YES];
+            if (nil == _custom_directory)  {
+                [self usage];
+                return nil;
+            }
+        }
 
-		if (nil == _revoked_directory)
-		{
+        if (nil == _platform_directory) {
+            _platform_directory = [self checkPath:@"certificates/platform" basePath:_top_level_directory isDirectory:YES];
+            if (nil == _platform_directory) {
+                [self usage];
+                return nil;
+            }
+        }
+        if (nil == _test_platform_directory) {
+            _test_platform_directory = [self checkPath:@"certificates/test-platform" basePath:_top_level_directory isDirectory:YES];
+            if (nil == _test_platform_directory) {
+                [self usage];
+                return nil;
+            }
+        }
+		if (nil == _revoked_directory) {
 			_revoked_directory = [self checkPath:@"certificates/revoked" basePath:_top_level_directory isDirectory:YES];
-		 	if (nil == _revoked_directory)
-			{
-				[self usage];
-				return nil;
+		 	if (nil == _revoked_directory) {
+				// distrusted list is no longer required: rdar://155912529
         	}
 		}
 
-		if (nil == _distrusted_directory)
-		{
+		if (nil == _distrusted_directory) {
 			_distrusted_directory = [self checkPath:@"certificates/distrusted" basePath:_top_level_directory isDirectory:YES];
-		 	if (nil == _distrusted_directory)
-			{
+		 	if (nil == _distrusted_directory) {
 				// distrusted list is no longer required: rdar://92699800
         	}
 		}
 
-		if (nil == _allowlist_directory)
-		{
+		if (nil == _allowlist_directory) {
 			_allowlist_directory = [self checkPath:@"certificates/allowlist" basePath:_top_level_directory isDirectory:YES];
-			if (nil == _allowlist_directory)
-			{
+			if (nil == _allowlist_directory) {
 				// allowlist is no longer required: rdar://29338872
 			}
 		}
-		if (nil == _certs_directory)
-		{
+		if (nil == _certs_directory) {
 			_certs_directory = [self checkPath:@"certificates/removed/intermediates" basePath:_top_level_directory isDirectory:YES];
-		 	if (nil == _certs_directory)
-			{
+		 	if (nil == _certs_directory) {
 				[self usage];
 				return nil;
         	}
 		}
 
-		if (nil == _evroot_config_path)
-		{
-			_evroot_config_path = [self checkPath:@"certificates/evroot.config" basePath:_top_level_directory isDirectory:NO];
-		 	if (nil == _evroot_config_path)
-			{
+        if (nil == _constraints_config_path)  {
+            _constraints_config_path = [self checkPath:@"certificates/constraints.json" basePath:_top_level_directory isDirectory:NO];
+             if (nil == _constraints_config_path) {
+                [self usage];
+                return nil;
+            }
+        }
+
+		if (nil == _evroot_config_path) {
+			_evroot_config_path = [self checkPath:@"certificates/EVRoots.json" basePath:_top_level_directory isDirectory:NO];
+		 	if (nil == _evroot_config_path) {
 				[self usage];
 				return nil;
         	}
 		}
-        if (nil == _info_plist_path)
-        {
+
+        if (nil == _info_plist_path) {
             _info_plist_path =  [self checkPath:@"config/Info-Asset.plist" basePath:_top_level_directory isDirectory:NO];
-            if (nil == _info_plist_path)
-			{
+            if (nil == _info_plist_path) {
 				[self usage];
 				return nil;
         	}
         }
-        if (nil == _version_number_plist_path)
-        {
+        if (nil == _version_number_plist_path) {
             _version_number_plist_path = [self checkPath:@"config/AssetVersion.plist" basePath:_top_level_directory isDirectory:NO];
-            if (nil == _info_plist_path)
-            {
+            if (nil == _info_plist_path) {
                 [self usage];
 				return nil;
             }
@@ -302,37 +268,30 @@
 - (NSString*)checkPath:(NSString*)name basePath:(NSString *)basePath isDirectory:(BOOL)isDirectory
 {
 	NSString* result = nil;
-	if (nil == name)
-	{
+	if (nil == name) {
 		return result;
 	}
 
 	NSFileManager* fileManager = [NSFileManager defaultManager];
 	BOOL isDir = NO;
 
-	if ([name hasPrefix:@"/"] || [name hasPrefix:@"~"])
-	{
+    if ([name hasPrefix:@"/"] || [name hasPrefix:@"~"]) {
         name = [name hasPrefix:@"~"] ? [name stringByExpandingTildeInPath] : name;
 		// This is a full path
-		if (![fileManager fileExistsAtPath:name isDirectory:&isDir] || isDir != isDirectory)
-		{
+		if (![fileManager fileExistsAtPath:name isDirectory:&isDir] || isDir != isDirectory) {
 			NSLog(@"%@ is invalid", name);
 			return result;
 		}
 		result = name;
-	}
-	else
-	{
+	} else {
 		NSString* full_path = nil;
-		if (nil == basePath)
-		{
+		if (nil == basePath) {
 			NSLog(@"%@ is not a full path but basePath is nil", name);
 			return result;
 		}
 
 		full_path = [basePath stringByAppendingPathComponent:name];
-		if (![fileManager fileExistsAtPath:full_path isDirectory:&isDir] || isDir != isDirectory)
-		{
+		if (![fileManager fileExistsAtPath:full_path isDirectory:&isDir] || isDir != isDirectory) {
 			NSLog(@"%@ is invalid", full_path);
 			return result;
 		}
@@ -347,133 +306,60 @@
    -------------------------------------------------------------------------- */
 - (BOOL)buildEVRootsData:(NSDictionary *)certs
 {
-    BOOL result = NO;
+    NSDictionary* evroots = nil;
 
-    if (nil == _EVRootsData || nil == _evroot_config_path)
-    {
-        return result;
-    }
-
-    // Read file into memory it is not that big
+    // Read config file into memory
     NSError* error = nil;
     NSData* fileData = [NSData dataWithContentsOfFile:self.evroot_config_path
                            options:NSDataReadingMappedIfSafe error:&error];
-    if (nil == fileData)
-    {
-        return result;
+    if (!fileData) {
+        NSLog(@"ERROR: BuildEVRoots: Failed to read %@", self.evroot_config_path);
+        return NO;
+    }
+    evroots = [NSJSONSerialization JSONObjectWithData:fileData options:0 error:&error];
+    if (!evroots) {
+        NSLog(@"ERROR: BuildEVRoots: Failed to deserialize %@", self.evroot_config_path);
+        return NO;
     }
 
-    // Turn the data into a string so that it can be edited
-    NSMutableString* evconfig_data = [[NSMutableString alloc] initWithData:fileData
-                                        encoding:NSUTF8StringEncoding];
-    if (nil == evconfig_data)
-    {
-        return result;
+    // Switch from config (SHA2 -> OIDs map) to expected plist (OID -> SHA1)
+    NSDictionary *fingerprint_map = evroots[@"fingerprint_map"];
+    NSDictionary *ev_config = evroots[@"EV_config"];
+    if (!fingerprint_map || ! ev_config) {
+        NSLog(@"ERROR: BuildEVRoots: Failed to find expected maps");
+        return NO;
     }
 
-    // Use Regex to remove all of the comments
-    NSRegularExpression* regex_comments =
-        [NSRegularExpression regularExpressionWithPattern:@"^#.*\n"
-                options:NSRegularExpressionAnchorsMatchLines error:&error];
-
-    NSRange full_string_range = NSMakeRange(0, [evconfig_data length]);
-    NSUInteger num_replacements =
-        [regex_comments replaceMatchesInString:evconfig_data
-                options:0 range:full_string_range withTemplate:@""];
-
-    if (0 == num_replacements)
-    {
-        return result;
-    }
-
-    // Use Regex to remove all of the blank lines
-    NSRegularExpression* regex_blankLines =
-        [NSRegularExpression regularExpressionWithPattern:@"^\n"
-            options:NSRegularExpressionAnchorsMatchLines error:&error];
-
-    full_string_range = NSMakeRange(0, [evconfig_data length]);
-    num_replacements = [regex_blankLines replaceMatchesInString:evconfig_data
-                            options:0 range:full_string_range withTemplate:@""];
-
-    if (0 == num_replacements)
-    {
-        return result;
-    }
-
-    // Break the single string into an array of lines.
-    NSArray* strings = [evconfig_data componentsSeparatedByString:@"\n"];
-    if (nil == strings)
-    {
-        return result;
-    }
-
-    // Process each line in the array
-    for (NSString* aLine in strings)
-    {
-        if (nil == aLine || [aLine length] < 2)
-        {
-            continue;
+    NSMutableDictionary *ev_plist = [NSMutableDictionary dictionary];
+    NSMutableSet *allCertHashes = [NSMutableSet set];
+    for (NSString *sha2hash in ev_config) {
+        NSString *sha1hashStr = fingerprint_map[sha2hash];
+        if (!sha1hashStr) {
+            NSLog(@"ERROR: BuildEVRoots: Failed to find sha1 hash for %@", sha2hash);
+            return NO;
         }
-        NSRegularExpression* regex_oid_str = [NSRegularExpression regularExpressionWithPattern:@"^[[0-9]+.]+"
-			options:NSRegularExpressionAnchorsMatchLines error:&error];
-
-		full_string_range = NSMakeRange(0, [aLine length]);
-		NSArray* oid_str_matchs = [regex_oid_str matchesInString:aLine options:0 range:full_string_range];
-		NSTextCheckingResult* ck_result = [oid_str_matchs objectAtIndex:0];
-		NSRange result_range = [ck_result rangeAtIndex:0];
-		NSString* oid_str = [aLine substringToIndex:result_range.length];
-		NSString* remainder_str = [aLine substringFromIndex:(result_range.length + 1)];
-		NSArray* items = [remainder_str componentsSeparatedByString:@"\""];
-
-        // The first item should be an OID string
-        NSUInteger num_items = [items count];
-        //NSString* oid_str = [items objectAtIndex:0];
-        NSUInteger iCnt = 0;
-
-		NSMutableSet* cert_digests = [NSMutableSet set];
-        // loop through the names of all of the cert files
-        for (iCnt = 1; iCnt < num_items; iCnt++)
-        {
-            NSString* cert_file_name = [items objectAtIndex:iCnt];
-			if (cert_file_name == nil || [cert_file_name hasPrefix:@" "] || [cert_file_name length] < 2)
-			{
-				continue;
-			}
-			//NSLog(@"cert_file_name = %@", cert_file_name);
-
-			// find the PSCert record for the file
-			PSCert* aCert = [certs objectForKey:cert_file_name];
-			if (nil != aCert)
-			{
-				[cert_digests addObject:aCert.certificate_hash];
-			}
-			else
-			{
-				NSLog(@"buildEVRootsData: could not find the cert for %@", cert_file_name);
-			}
-		}
-
-        // Add certificates for current vendor-specific OID
-        NSMutableArray* existing_certs = [_EVRootsData objectForKey:oid_str];
-        if (nil != existing_certs)
-        {
-            [cert_digests addObjectsFromArray:existing_certs];
+        NSArray *oids = ev_config[sha2hash];
+        if (!oids) {
+            NSLog(@"ERROR: BuildEVRoots: Failed to find oids for %@", sha2hash);
+            return NO;
         }
-
-		[_EVRootsData setObject:[cert_digests allObjects] forKey:oid_str];
-
-        // Add (all) certificates for generic CAB Forum OID
-        existing_certs = [_EVRootsData objectForKey:@"2.23.140.1.1"];
-        if ( nil != existing_certs)
-        {
-            [cert_digests addObjectsFromArray:existing_certs];
+        NSData *sha1hash = [sha1hashStr hexStringToData];
+        [allCertHashes addObject:sha1hash];
+        for (NSString * oid in oids) {
+            if (ev_plist[oid]) {
+                NSMutableArray *hashes = ev_plist[oid];
+                [hashes addObject:sha1hash];
+            } else {
+                ev_plist[oid] = [@[sha1hash] mutableCopy];
+            }
         }
-
-        [_EVRootsData setObject:[cert_digests allObjects] forKey:@"2.23.140.1.1"];
     }
 
-    result = YES;
-    return result;
+    // Add (all) certificates for generic CAB Forum OID
+    ev_plist[@"2.23.140.1.1"] = [allCertHashes allObjects];
+    _EVRootsData = ev_plist;
+
+    return YES;
 }
 
 /* --------------------------------------------------------------------------
@@ -578,17 +464,58 @@
     return result;
 }
 
+- (NSMutableArray*)anchorCertificates
+{
+    // return array of PSCert for all system roots, platform roots, and custom anchors
+    PSAssetFlags certFlags = isAnchor | hasFullCert | isSystem;
+    PSCerts* pscerts_roots = [[PSCerts alloc] initWithCertFilePath:self.root_directory withFlags:[NSNumber numberWithUnsignedLong:certFlags]];
+    certFlags = isAnchor | hasFullCert | isPlatform;
+    PSCerts* pscerts_platform = [[PSCerts alloc] initWithCertFilePath:self.platform_directory withFlags:[NSNumber numberWithUnsignedLong:certFlags]];
+    certFlags = isAnchor | hasFullCert | isCustom;
+    PSCerts* pscerts_custom = [[PSCerts alloc] initWithCertFilePath:self.custom_directory withFlags:[NSNumber numberWithUnsignedLong:certFlags]];
+    certFlags = isAnchor | hasFullCert | isSystem | isTest;
+    PSCerts* pscerts_test_roots = [[PSCerts alloc] initWithCertFilePath:self.test_root_directory withFlags:[NSNumber numberWithUnsignedLong:certFlags]];
+    certFlags = isAnchor | hasFullCert | isPlatform | isTest;
+    PSCerts* pscerts_test_platform = [[PSCerts alloc] initWithCertFilePath:self.test_platform_directory withFlags:[NSNumber numberWithUnsignedLong:certFlags]];
+
+
+    NSMutableArray* certs = [NSMutableArray array];
+    [certs addObjectsFromArray:pscerts_roots.certs];
+    [certs addObjectsFromArray:pscerts_platform.certs];
+    [certs addObjectsFromArray:pscerts_custom.certs];
+    [certs addObjectsFromArray:pscerts_test_roots.certs];
+    [certs addObjectsFromArray:pscerts_test_platform.certs];
+    return certs;
+}
 
 - (BOOL)processCertificates
 {
 	BOOL result = NO;
 
     // From the roots directory, create the index and table data for the asset
-    PSAssetFlags certFlags = isAnchor | hasFullCert;
+    PSAssetFlags certFlags = isAnchor | hasFullCert | isSystem;
     NSNumber* flags = [NSNumber numberWithUnsignedLong:certFlags];
     PSCerts* pscerts_roots = [[PSCerts alloc] initWithCertFilePath:self.root_directory withFlags:flags];
 	_certRootsData = [[PSCertData alloc] initWithCertificates:pscerts_roots.certs];
 
+    // Create constraints table from configuration file
+    if (![self buildConstraintsTable]) {
+        NSLog(@"Error: unable to build constraints table");
+        return NO;
+    }
+
+    // Create anchor table from certs and constraints
+    NSMutableArray* certs = [self anchorCertificates];
+    if (![self buildAnchorTable:certs withConstraints:_constraints_table]) {
+        NSLog(@"Error: unable to build anchor table");
+        return NO;
+    }
+
+    // Copy anchor certs to the output Anchors directory
+    if (![self outputAnchors:certs]) {
+        NSLog(@"Error: unable to copy anchors to output directory");
+        return NO;
+    }
 
     // From the blocked and gray listed certs create an array of the keys.
 	NSMutableArray* gray_certs = [NSMutableArray array];
@@ -653,6 +580,99 @@
     return result;
 }
 
+- (BOOL)buildConstraintsTable
+{
+    if (!_constraints_config_path) { return NO; }
+    NSDictionary* constraints = nil;
+
+    // Read config file into memory
+    NSError* error = nil;
+    NSData* fileData = [NSData dataWithContentsOfFile:self.constraints_config_path
+                           options:NSDataReadingMappedIfSafe error:&error];
+    if (!fileData) { return NO; }
+    constraints = [NSJSONSerialization JSONObjectWithData:fileData options:0 error:&error];
+    if (!constraints) { return NO; }
+    _constraints_table = constraints;
+    return YES;
+}
+
+- (BOOL)buildAnchorTable:(NSArray*)certs withConstraints:(NSDictionary*) constraints
+{
+    if (!certs) { return NO; }
+    // Create dictionary keyed by normalized subject hash
+    NSMutableDictionary* records = [NSMutableDictionary dictionary];
+    for (PSCert* aCert in certs) {
+        // Get the hash
+        NSData* normalized_subject_hash = aCert.normalized_subject_hash;
+        if (!normalized_subject_hash) {
+            NSLog(@"Could not get the normalized hash for the cert at %@", aCert.file_path);
+            return NO;
+        }
+        // See if there is already an entry with this value (multiple certs may have same subject hash)
+        NSString *normalized_subject_hash_str = [[normalized_subject_hash toHexString] uppercaseString];
+        NSMutableArray* items = [records objectForKey:normalized_subject_hash_str];
+        if (!items) {
+            // new item
+            items = [NSMutableArray array];
+        }
+        // Create a lookup dictionary for each anchor cert with these keys:
+        // "sha2" = (certificate digest as hex string)
+        // "spki-sha2" = (spki digest as hex string)
+        // "oids" = (array of permitted policy oids as string, if present)
+        // "type" = (string: "none", "system", "platform", "custom")
+        NSMutableDictionary* anchor = [NSMutableDictionary dictionary];
+        NSString* cert_hash_str = [[aCert.certificate_sha256_hash toHexString] uppercaseString];
+        [anchor setObject:cert_hash_str forKey:@"sha2"];
+        NSString* spki_hash_str = [[aCert.spki_hash toHexString] uppercaseString];
+        [anchor setObject:spki_hash_str forKey:@"spki-sha2"];
+        [anchor setObject:aCert.anchor_type forKey:@"type"];
+
+        /* Add any policy constraints */
+        NSArray* policy_oids = NULL;
+        NSDictionary *constraintsForType = [constraints objectForKey:aCert.anchor_type];
+        policy_oids = [constraintsForType  objectForKey:cert_hash_str];
+        if (!policy_oids) { policy_oids = [NSArray array]; }
+        [anchor setObject:policy_oids forKey:@"oids"];
+
+        PSAssetFlags assetFlags = [aCert.flags unsignedLongValue];
+        if (assetFlags & (isAnchor | hasFullCert)) {
+            // add only if we have the cert data and it is considered an anchor
+            [items addObject:anchor];
+            [records setObject:items forKey:normalized_subject_hash_str];
+        }
+    }
+    _anchor_lookup_table = records;
+    return YES;
+}
+
+- (BOOL)outputAnchors:(NSArray*)certs
+{
+    NSError* error = nil;
+    NSString* anchors_path = nil;
+    if (!certs) {
+        NSLog(@"Error: no anchors provided to output");
+        return NO;
+    }
+    anchors_path = [self.output_directory stringByAppendingPathComponent:@"Anchors"];
+    if (![self ensureDirectoryPath:anchors_path]) {
+        NSLog(@"Error: unable to ensure the output Anchors directory!");
+        return NO;
+    }
+    for (PSCert* aCert in certs) {
+        NSString* src_path = aCert.file_path;
+        NSString* hash_name = [NSString stringWithFormat:@"%@.cer",
+                               [[aCert.certificate_sha256_hash toHexString] uppercaseString]];
+        NSString *dst_path = [anchors_path stringByAppendingPathComponent:hash_name];
+        NSFileManager* fileManager = [NSFileManager defaultManager];
+        if (![fileManager fileExistsAtPath:dst_path]) {
+            if (![fileManager copyItemAtPath:src_path toPath:dst_path error:&error]) {
+                NSLog(@"Error: unable to copy \"%@\" to \"%@\": %@", src_path, dst_path, error);
+                return NO;
+            }
+        }
+    }
+    return YES;
+}
 
 - (BOOL)outputPlistsToDirectory
 {
@@ -765,6 +785,22 @@
 		}
 	}
 
+    path_str = [self.output_directory stringByAppendingPathComponent:@"Anchors.plist"];
+    if (_anchor_lookup_table) {
+        NSData* anchor_plist = [NSPropertyListSerialization dataWithPropertyList:_anchor_lookup_table
+            format:NSPropertyListBinaryFormat_v1_0 /*NSPropertyListXMLFormat_v1_0*/ options:0
+            error:&error];
+        if (error) {
+            NSLog(@"Error converting the anchor lookup table into plist data: error %@", error);
+            return result;
+        }
+        if (![anchor_plist writeToFile:path_str options:0 error:&error])
+        {
+            NSLog(@"Error writing out Anchors.plist data: error %@", error);
+            return result;
+        }
+    }
+
     path_str = [self.output_directory stringByAppendingPathComponent:@"AssetVersion.plist"];
 
     NSFileManager* fileManager = [NSFileManager defaultManager];
@@ -800,7 +836,6 @@
     unsigned char hash_buffer[CC_SHA256_DIGEST_LENGTH];
 
     NSString* evroots_str = @"EVRoots.plist";
-    NSString* blocked_str = @"Blocked.plist";
     NSString* certsIndex_str = @"certsIndex.data";
     NSString* certsTable_str = @"certsTable.data";
     NSString* assetVersion_str = @"AssetVersion.plist";
@@ -819,7 +854,7 @@
     NSNumber* version_number = [version_number_dict objectForKey:@"VersionNumber"];
 
 
-    NSArray* file_list = [NSArray arrayWithObjects:evroots_str, blocked_str, certsIndex_str, certsTable_str, assetVersion_str, nil];
+    NSArray* file_list = [NSArray arrayWithObjects:evroots_str, certsIndex_str, certsTable_str, assetVersion_str, nil];
     NSMutableDictionary* manifest_dict = [NSMutableDictionary dictionary];
 
     for (NSString* file_path in file_list)

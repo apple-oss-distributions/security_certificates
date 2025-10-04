@@ -2,7 +2,7 @@
 //  PSCert.m
 //  CertificateTool
 //
-//  Copyright (c) 2012-2017 Apple Inc. All Rights Reserved.
+//  Copyright (c) 2012-2017,2024 Apple Inc. All Rights Reserved.
 //
 
 #import "PSCert.h"
@@ -12,23 +12,21 @@
 #import <corecrypto/ccsha2.h>
 #import <corecrypto/ccdigest.h>
 #import <Security/Security.h>
+#import <Security/SecCertificatePriv.h>
 
 #import "DataConversion.h"
 
 // SecCertificateInternal.h declararations
 CFDataRef SecCertificateGetAuthorityKeyID(SecCertificateRef certificate);
 
-// SecCertificatePriv.h declarations
-// (note we cannot simply include SecCertificatePriv.h, since some of
-// these functions were exported but not declared prior to 10.12.2,
-// and we need to build on earlier versions.)
-CFDataRef SecCertificateGetNormalizedIssuerContent(SecCertificateRef certificate);
-CFDataRef SecCertificateGetSubjectKeyID(SecCertificateRef certificate);
-
-
 static CFDataRef GetNormalizedIssuerContent(SecCertificateRef cert)
 {
     return SecCertificateGetNormalizedIssuerContent(cert);
+}
+
+static CFDataRef GetNormalizedSubjectContent(SecCertificateRef cert)
+{
+    return SecCertificateGetNormalizedSubjectContent(cert);
 }
 
 static CFDataRef GetAuthorityKeyID(SecCertificateRef cert)
@@ -58,10 +56,19 @@ static CFDataRef GetSubjectKeyID(SecCertificateRef cert)
 @synthesize certificate_hash = _certificate_hash;
 @synthesize certificate_sha256_hash = _certificate_sha256_hash;
 @synthesize public_key_hash = _public_key_hash;
+@synthesize spki_hash = _spki_hash;
 @synthesize file_path = _file_path;
 @synthesize auth_key_id = _auth_key_id;
 @synthesize subj_key_id = _subj_key_id;
 @synthesize flags = _flags;
+@synthesize anchor_type = _anchor_type;
+
+const NSString* kSecAnchorTypeUndefined = @"none";
+const NSString* kSecAnchorTypeSystem = @"system";
+const NSString* kSecAnchorTypePlatform = @"platform";
+const NSString* kSecAnchorTypeCustom = @"custom";
+const NSString* kSecAnchorTypeSystemTEST = @"test-system";
+const NSString* kSecAnchorTypePlatformTEST = @"test-platform";
 
 
 - (id)initWithCertFilePath:(NSString *)filePath withFlags:(NSNumber*)flags
@@ -90,9 +97,27 @@ static CFDataRef GetSubjectKeyID(SecCertificateRef cert)
         _public_key_hash = nil;
         _auth_key_id = nil;
         _subj_key_id = nil;
-        _certificate_sha256_hash = nil;
-
         _certificate_hash = [self getCertificateHash];
+        _certificate_sha256_hash = [self getCertificateSHA256Hash];
+        _spki_hash = [self getSPKIHash:certRef];
+
+        if (isSystem & assetFlags) {
+            if (isTest & assetFlags) {
+                _anchor_type = kSecAnchorTypeSystemTEST;
+            } else {
+                _anchor_type = kSecAnchorTypeSystem;
+            }
+        } else if (isPlatform & assetFlags) {
+            if (isTest & assetFlags) {
+                _anchor_type = kSecAnchorTypePlatformTEST;
+            } else {
+                _anchor_type = kSecAnchorTypePlatform;
+            }
+        } else if (isCustom & assetFlags) {
+            _anchor_type = kSecAnchorTypeCustom;
+        } else {
+            _anchor_type = kSecAnchorTypeUndefined;
+        }
 
         if (isAnchor & assetFlags)
         {
@@ -154,12 +179,12 @@ static CFDataRef GetSubjectKeyID(SecCertificateRef cert)
 
     if (NULL != iosCertRef)
     {
-        CFDataRef temp_data = GetNormalizedIssuerContent(iosCertRef);
+        CFDataRef temp_data = GetNormalizedSubjectContent(iosCertRef);
 
         if (NULL == temp_data)
         {
             CFStringRef name = SecCertificateCopySubjectSummary(cert_ref);
-            NSLog(@"GetNormalizedIssuerContent returned NULL for %@", name);
+            NSLog(@"GetNormalizedSubjectContent returned NULL for %@", name);
             if (name) { CFRelease(name); }
             CFRelease(iosCertRef);
             return result;
@@ -168,7 +193,7 @@ static CFDataRef GetSubjectKeyID(SecCertificateRef cert)
         if (CFGetTypeID(temp_data) != CFDataGetTypeID())
         {
             CFStringRef name = SecCertificateCopySubjectSummary(cert_ref);
-            NSLog(@"GetNormalizedIssuerContent returned non-CFDataRef type for %@", name);
+            NSLog(@"GetNormalizedSubjectContent returned non-CFDataRef type for %@", name);
             if (name) { CFRelease(name); }
             CFRelease(iosCertRef);
             return result;
@@ -240,6 +265,11 @@ extern CFDataRef SecCertificateCopyPublicKeySHA1DigestFromCertificateData(CFAllo
     }
 
     return result;
+}
+
+- (NSData *)getSPKIHash:(SecCertificateRef)cert_ref
+{
+    return CFBridgingRelease(SecCertificateCopySubjectPublicKeyInfoSHA256Digest(cert_ref));
 }
 
 - (NSString *)getKeyIDString:(SecCertificateRef)cert_ref forAuthKey:(BOOL)auth_key
